@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width,initial-scale=1.0, shrink-to-fit=no" name="viewport">
+    <meta content="telephone=no" name="format-detection">
+    <meta content="address=no" name="format-detection">
+    <meta content="origin" name="referrer">
+    <title>Google</title>
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"
+        crossorigin="anonymous">
+    <style>
+        [v-cloak] {
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="d-flex justify-content-center">
+            <div class="ml-5 mr-5">
+                <v-list :list="leftList" ref="left" @change="onLeftChange"></v-list>
+            </div>
+            <div class="ml-5 mr-5">
+                <v-list :list="rightList" ref="right" @change="onRightChange"></v-list>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center">
+            <button type="button" class="btn btn-primary ml-2 mr-2" @click.prevent="match3v3">3 V 3</button>
+            <button type="button" class="btn btn-success ml-2 mr-2" @click.prevent="match5v5">5 V 5</button>
+            <button type="button" class="btn btn-warning ml-2 mr-2" @click.prevent="reset">重置</button>
+        </div>
+        <div v-if="queueList.length" class="d-flex justify-content-center mt-5">
+            <ul v-for="(queue,index) in queueList" class="list-group ml-2 mr-2">
+                <li class="list-group-item active" aria-current="true">队伍 {{index+1}}</li>
+                <li v-for="row in queue" class="list-group-item">{{row.ID}}</li>
+            </ul>
+        </div>
+    </div>
+    <script type="text/template" id="template-list">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">游戏ID</th>
+                    <th scope="col">职业心法</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(row,index) in rows">
+                    <td>
+                        <div class="btn rounded-circle text-primary" @click="add(index)"><i class="bi bi-plus-circle-fill"></i></div>
+                        <div class="btn rounded-circle text-danger" @click="remove(index)"><i class="bi bi-trash-fill"></i></div>
+                    </td>
+                    <td><input type="text" class="form-control" v-model="row.ID" @change="emitChange" /></td>
+                    <td><input type="text" class="form-control" v-model="row.Job" @change="emitChange" /></td>
+                </tr>
+            </tbody>
+        </table>
+    </script>
+</body>
+<script src="https://unpkg.com/vue@next"></script>
+<script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+<script>
+    const db = new Dexie('match');
+    db.version(1).stores({
+        leftList: 'ID',
+        rightList: 'ID',
+    });
+
+    function randomInt(start, end) {
+
+        return parseInt(Math.random() * (end - start + 1) + start, 10)
+    }
+</script>
+<script>
+    const vApp = Vue.createApp({
+        data() {
+            return {
+                leftList: [],
+                rightList: [],
+                leftMacthSet: new Set(),
+                rightMacthSet: new Set(),
+                queueList: []
+            }
+        },
+        async mounted() {
+            this.leftList = await db.leftList.toArray();
+            this.rightList = await db.rightList.toArray();
+            this.reset();
+        },
+        methods: {
+            match3v3() {
+                this.match(1, 2)
+            },
+            match5v5() {
+                this.match(2, 3)
+            },
+            match(left, right) {
+                const leftMatchs = this.$refs.left.match(left);
+                if (!leftMatchs) {
+                    return
+                }
+                const rightMatchs = this.$refs.right.match(right);
+                if (!rightMatchs) {
+                    return
+                }
+                this.queueList.push([...leftMatchs, ...rightMatchs])
+            },
+            reset() {
+                this.$refs.left.reset();
+                this.$refs.right.reset();
+                this.queueList.length = 0;
+            },
+            async onLeftChange(rows) {
+                await db.leftList.clear();
+                rows.length && db.leftList.bulkAdd(rows);
+            },
+            async onRightChange(rows) {
+                await db.rightList.clear();
+                rows.length && db.rightList.bulkAdd(rows);
+            }
+        }
+    });
+
+    vApp.component('v-list', {
+        props: {
+            list: {
+                default: (() => [])
+            }
+        },
+        emits: ["change"],
+        mounted() {
+            this.setRows(this.list)
+        },
+        watch: {
+            list(val) {
+                this.setRows(val)
+            }
+        },
+        data() {
+            return {
+                rows: [],
+                matchSet: new Set()
+            }
+        },
+        methods: {
+            setRows(list) {
+                this.rows = list;
+                this.rows.push(this.gen());
+            },
+            gen() {
+                return { ID: "", Job: "" }
+            },
+            add(index) {
+                this.rows.splice(index + 1, 0, this.gen());
+                this.emitChange()
+            },
+            remove(index) {
+                this.rows.splice(index, 1);
+                this.emitChange()
+            },
+            emitChange() {
+                this.$emit("change", this.getPlainData(this.rows))
+            },
+            reset() {
+                this.matchSet = new Set();
+            },
+            match(n) {
+                const list = this.getMatchData(this.rows);
+                if (list.length - this.matchSet.size < n) {
+                    return
+                }
+                const canMatch = list.filter(e => !this.matchSet.has(e.ID));
+                const matchList = this.getRandomData(canMatch, n);
+                matchList.forEach(e => this.matchSet.add(e.ID));
+                return matchList
+            },
+            getPlainData(rows) {
+                return rows.map(a => {
+                    return {
+                        ID: a.ID.trim(),
+                        Job: a.Job.trim()
+                    }
+                }).filter(a => a.ID || a.Job)
+            },
+            getMatchData(rows) {
+                return this.getPlainData(rows).filter(a => a.ID)
+            },
+            getRandomData(rows, n) {
+                const copyRows = rows.slice();
+                const data = [];
+                for (let i = 0, max = rows.length - 1; i < n; i++) {
+                    data.push(copyRows.splice(randomInt(0, max), 1)[0])
+                    max--;
+                }
+                return data
+            }
+        },
+        template: document.getElementById('template-list').innerHTML
+    });
+
+    vApp.mount('#app')
+</script>
+
+</html>
