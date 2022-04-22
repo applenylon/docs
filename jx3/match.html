@@ -22,29 +22,46 @@
 
 <body>
     <div id="app" v-cloak>
+        <div class="d-flex justify-content-center mt-1">
+            <label type="button" class="btn btn-sm btn-info mx-2 position-relative overflow-hidden">
+                <input type="file" ref="file" accept=".json" @change="onImport"
+                    class="position-absolute w-25 h-25 invisible" />
+                <i class="bi bi-upload"></i>
+                导入</label>
+            <label type="button" class="btn btn-sm btn-secondary mx-2" @click.prevent="onExport">
+                <i class="bi bi-download"></i>
+                导出</label>
+        </div>
         <div class="d-flex justify-content-center flex-wrap">
-            <div class="ml-md-5 mr-md-5 mt-2">
+            <div class="mr-md-5 mt-2">
                 <v-list :list="leftList" ref="left" @change="onLeftChange"></v-list>
             </div>
-            <div class="ml-md-5 mr-md-5 mt-2">
+            <div class="ml-md-5 mt-2">
                 <v-list :list="rightList" ref="right" @change="onRightChange"></v-list>
             </div>
         </div>
         <div class="d-flex justify-content-center mb-3">
-            <button type="button" class="btn btn-primary ml-2 mr-2" @click.prevent="match3v3">3 V 3</button>
-            <button type="button" class="btn btn-success ml-2 mr-2" @click.prevent="match5v5">5 V 5</button>
-            <button type="button" class="btn btn-warning ml-2 mr-2" @click.prevent="reset">重置</button>
+            <button type="button" class="btn btn-sm btn-primary mx-2" @click.prevent="match3v3">3 V 3</button>
+            <button type="button" class="btn btn-sm btn-success mx-2" @click.prevent="match5v5">5 V 5</button>
+            <button type="button" class="btn btn-sm btn-warning mx-2" @click.prevent="reset">重置</button>
         </div>
-        <div v-if="queueList.length" class="d-flex justify-content-center flex-wrap">
-            <ul v-for="(queue,index) in queueList" class="list-group mt-2 ml-2 mr-2">
-                <li class="list-group-item" :style="{backgroundColor:getQueueColor(index)}" aria-current="true">队伍
+        <div v-if="queueList.length" class="d-flex justify-content-center align-items-start flex-wrap">
+            <ul v-for="(queue,index) in queueList"
+                class="list-unstyled text-center border border-success rounded overflow-hidden mt-2 mx-2">
+                <li class="px-3 py-1" :style="{backgroundColor:getQueueColor(index)}" aria-current="true">队伍
                     {{index+1}}</li>
-                <li v-for="row in queue" class="list-group-item">{{row.ID}}</li>
+                <li class="px-3 py-1 border-top border-success" v-for="row in queue">{{row.ID}}({{row.Job}})</li>
+            </ul>
+
+            <ul v-if="otherList.length"
+                class="list-unstyled text-center border border-danger rounded overflow-hidden mt-2 mx-2">
+                <li class="px-3 py-1 text-danger" aria-current="true">轮空</li>
+                <li class="px-3 py-1 border-top border-danger" v-for="row in otherList">{{row.ID}}({{row.Job}})</li>
             </ul>
         </div>
     </div>
     <script type="text/template" id="template-list">
-        <table class="table">
+        <table class="table table-sm">
             <thead>
                 <tr>
                     <th scope="col">#</th>
@@ -55,11 +72,11 @@
             <tbody>
                 <tr v-for="(row,index) in rows" :style="{backgroundColor:getRowColor(row.ID)}">
                     <td style="white-space: nowrap;">
-                        <div class="btn rounded-circle text-primary" @click="add(index)"><i class="bi bi-plus-circle-fill"></i></div>
-                        <div class="btn rounded-circle text-danger" @click="remove(index)"><i class="bi bi-trash-fill"></i></div>
+                        <div class="btn btn-sm rounded-circle text-primary" @click="add(index)"><i class="bi bi-plus-circle-fill"></i></div>
+                        <div class="btn btn-sm rounded-circle text-danger" @click="remove(index)"><i class="bi bi-trash-fill"></i></div>
                     </td>
-                    <td :class={'border-primary':matchMap.has(row.ID)} ><input type="text" class="form-control" v-model="row.ID" @change="emitChange"/></td>
-                    <td><input type="text" class="form-control" v-model="row.Job" @change="emitChange" /></td>
+                    <td :class={'border-primary':matchMap.has(row.ID)} ><input type="text" class="form-control form-control-sm" v-model="row.ID" @change="emitChange"/></td>
+                    <td><input type="text" class="form-control form-control-sm" v-model="row.Job" @change="emitChange" /></td>
                 </tr>
             </tbody>
         </table>
@@ -74,6 +91,18 @@
         leftList: 'ID',
         rightList: 'ID',
     });
+
+    function readJsonFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function () {
+                resolve(JSON.parse(reader.result))
+            };
+
+            reader.onerror = reject
+        })
+    }
 
     function randomInt(start, end) {
         return parseInt(Math.random() * (end - start + 1) + start, 10)
@@ -91,6 +120,16 @@
                 queueList: []
             }
         },
+        computed: {
+            otherList() {
+                if (this.queueList.length) {
+                    const set = new Set();
+                    this.queueList.forEach(list => list.forEach(e => set.add(e.ID)));
+                    return [...this.leftList.filter(e => e.ID.trim() && !set.has(e.ID)), ...this.rightList.filter(e => e.ID.trim() && !set.has(e.ID))]
+                }
+                return []
+            }
+        },
         async mounted() {
             this.leftList = await db.leftList.toArray();
             this.rightList = await db.rightList.toArray();
@@ -98,9 +137,15 @@
         },
         methods: {
             match3v3() {
+                if(this.queueList.length){
+                    return
+                }
                 while (this.match(1, 2)) { }
             },
             match5v5() {
+                if(this.queueList.length){
+                    return
+                }
                 while (this.match(2, 3)) { }
             },
             match(left, right) {
@@ -116,6 +161,37 @@
                 this.$refs.right.matchLog(rightMatchs);
                 this.queueList.push([...leftMatchs, ...rightMatchs]);
                 return true
+            },
+            onImport(e) {
+                const target = e.target;
+                readJsonFile(target.files[0]).then((json) => {
+                    const data = JSON.parse(JSON.stringify(json));
+                    if (json.leftList) {
+                        this.leftList = json.leftList;
+                        this.onLeftChange(data.leftList);
+                    }
+                    if (json.rightList) {
+                        this.rightList = json.rightList;
+                        this.onRightChange(data.rightList);
+                    }
+                }).catch(() => {
+
+                });
+                target.value = "";
+            },
+            onExport() {
+                const file = new File([JSON.stringify({
+                    leftList: this.$refs.left.getPlainData(),
+                    rightList: this.$refs.right.getPlainData()
+                }, null, 2)], 'match.txt', { type: 'application/json' });
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `游戏匹配${new Date().toLocaleString()}.json`;
+                a.click();
+                requestAnimationFrame(() => {
+                    URL.revokeObjectURL(url)
+                })
             },
             reset() {
                 this.$refs.left.reset();
@@ -183,7 +259,7 @@
                 this.emitChange()
             },
             emitChange() {
-                this.$emit("change", this.getPlainData(this.rows))
+                this.$emit("change", this.getPlainData())
             },
             reset() {
                 this.matchColor = 0;
@@ -191,7 +267,7 @@
                 this.matchMap = new Map();
             },
             match(n) {
-                const list = this.getMatchData(this.rows);
+                const list = this.getMatchData();
                 if (list.length - this.matchMap.size < n) {
                     this.alert = "剩余 ID 不足";
                     return
@@ -203,16 +279,16 @@
                 const colorIndex = this.matchColor++;
                 matchList.forEach(e => this.matchMap.set(e.ID, colorIndex));
             },
-            getPlainData(rows) {
-                return rows.map(a => {
+            getPlainData() {
+                return this.rows.map(a => {
                     return {
                         ID: a.ID.trim(),
                         Job: a.Job.trim()
                     }
                 }).filter(a => a.ID || a.Job)
             },
-            getMatchData(rows) {
-                return this.getPlainData(rows).filter(a => a.ID)
+            getMatchData() {
+                return this.getPlainData().filter(a => a.ID)
             },
             getRandomData(rows, n) {
                 const copyRows = rows.slice();
