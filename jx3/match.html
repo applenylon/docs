@@ -37,7 +37,8 @@
         </div>
         <div v-if="queueList.length" class="d-flex justify-content-center mt-5">
             <ul v-for="(queue,index) in queueList" class="list-group ml-2 mr-2">
-                <li class="list-group-item active" aria-current="true">队伍 {{index+1}}</li>
+                <li class="list-group-item" :style="{backgroundColor:getQueueColor(index)}" aria-current="true">队伍
+                    {{index+1}}</li>
                 <li v-for="row in queue" class="list-group-item">{{row.ID}}</li>
             </ul>
         </div>
@@ -52,16 +53,17 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(row,index) in rows">
+                <tr v-for="(row,index) in rows" :style="{backgroundColor:getRowColor(row.ID)}">
                     <td>
                         <div class="btn rounded-circle text-primary" @click="add(index)"><i class="bi bi-plus-circle-fill"></i></div>
                         <div class="btn rounded-circle text-danger" @click="remove(index)"><i class="bi bi-trash-fill"></i></div>
                     </td>
-                    <td><input type="text" class="form-control" v-model="row.ID" @change="emitChange" /></td>
+                    <td :class={'border-primary':matchMap.has(row.ID)} ><input type="text" class="form-control" v-model="row.ID" @change="emitChange"/></td>
                     <td><input type="text" class="form-control" v-model="row.Job" @change="emitChange" /></td>
                 </tr>
             </tbody>
         </table>
+        <!-- <div v-if="alert" class="alert alert-danger" role="alert">{{alert}}</div> -->
     </script>
 </body>
 <script src="https://unpkg.com/vue@next"></script>
@@ -74,9 +76,10 @@
     });
 
     function randomInt(start, end) {
-
         return parseInt(Math.random() * (end - start + 1) + start, 10)
     }
+
+    const colorList = ["#9e9e9e", "#ff9800", "#ffc107", "#795548", "#ffeb3b", "#cddc39", "#4caf50", "#00bcd4", "#03a9f4", "#9c27b0"];
 </script>
 <script>
     const vApp = Vue.createApp({
@@ -84,8 +87,7 @@
             return {
                 leftList: [],
                 rightList: [],
-                leftMacthSet: new Set(),
-                rightMacthSet: new Set(),
+                colorList,
                 queueList: []
             }
         },
@@ -96,10 +98,10 @@
         },
         methods: {
             match3v3() {
-                this.match(1, 2)
+                while (this.match(1, 2)) { }
             },
             match5v5() {
-                this.match(2, 3)
+                while (this.match(2, 3)) { }
             },
             match(left, right) {
                 const leftMatchs = this.$refs.left.match(left);
@@ -110,7 +112,10 @@
                 if (!rightMatchs) {
                     return
                 }
-                this.queueList.push([...leftMatchs, ...rightMatchs])
+                this.$refs.left.matchLog(leftMatchs);
+                this.$refs.right.matchLog(rightMatchs);
+                this.queueList.push([...leftMatchs, ...rightMatchs]);
+                return true
             },
             reset() {
                 this.$refs.left.reset();
@@ -124,6 +129,9 @@
             async onRightChange(rows) {
                 await db.rightList.clear();
                 rows.length && db.rightList.bulkAdd(rows);
+            },
+            getQueueColor(colorIndex) {
+                return colorList[colorIndex % colorList.length]
             }
         }
     });
@@ -146,10 +154,19 @@
         data() {
             return {
                 rows: [],
-                matchSet: new Set()
+                alert: "",
+                matchColor: 0,
+                matchMap: new Map()
             }
         },
         methods: {
+            getRowColor(ID) {
+                const colorIndex = this.matchMap.get(ID);
+                if (colorIndex > -1) {
+                    return colorList[colorIndex % colorList.length]
+                }
+                return
+            },
             setRows(list) {
                 this.rows = list;
                 this.rows.push(this.gen());
@@ -169,17 +186,22 @@
                 this.$emit("change", this.getPlainData(this.rows))
             },
             reset() {
-                this.matchSet = new Set();
+                this.matchColor = 0;
+                this.alert = "";
+                this.matchMap = new Map();
             },
             match(n) {
                 const list = this.getMatchData(this.rows);
-                if (list.length - this.matchSet.size < n) {
+                if (list.length - this.matchMap.size < n) {
+                    this.alert = "剩余 ID 不足";
                     return
                 }
-                const canMatch = list.filter(e => !this.matchSet.has(e.ID));
-                const matchList = this.getRandomData(canMatch, n);
-                matchList.forEach(e => this.matchSet.add(e.ID));
-                return matchList
+                const canMatch = list.filter(e => !this.matchMap.has(e.ID));
+                return this.getRandomData(canMatch, n);
+            },
+            matchLog(matchList) {
+                const colorIndex = this.matchColor++;
+                matchList.forEach(e => this.matchMap.set(e.ID, colorIndex));
             },
             getPlainData(rows) {
                 return rows.map(a => {
