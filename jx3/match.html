@@ -22,21 +22,21 @@
 
 <body>
     <div id="app" v-cloak>
-        <div class="d-flex justify-content-center">
-            <div class="ml-5 mr-5">
+        <div class="d-flex justify-content-center flex-wrap">
+            <div class="ml-md-5 mr-md-5 mt-2">
                 <v-list :list="leftList" ref="left" @change="onLeftChange"></v-list>
             </div>
-            <div class="ml-5 mr-5">
+            <div class="ml-md-5 mr-md-5 mt-2">
                 <v-list :list="rightList" ref="right" @change="onRightChange"></v-list>
             </div>
         </div>
-        <div class="d-flex justify-content-center">
+        <div class="d-flex justify-content-center mb-3">
             <button type="button" class="btn btn-primary ml-2 mr-2" @click.prevent="match3v3">3 V 3</button>
             <button type="button" class="btn btn-success ml-2 mr-2" @click.prevent="match5v5">5 V 5</button>
             <button type="button" class="btn btn-warning ml-2 mr-2" @click.prevent="reset">重置</button>
         </div>
-        <div v-if="queueList.length" class="d-flex justify-content-center mt-5">
-            <ul v-for="(queue,index) in queueList" class="list-group ml-2 mr-2">
+        <div v-if="queueList.length" class="d-flex justify-content-center flex-wrap">
+            <ul v-for="(queue,index) in queueList" class="list-group mt-2 ml-2 mr-2">
                 <li class="list-group-item" :style="{backgroundColor:getQueueColor(index)}" aria-current="true">队伍
                     {{index+1}}</li>
                 <li v-for="row in queue" class="list-group-item">{{row.ID}}</li>
@@ -54,7 +54,7 @@
             </thead>
             <tbody>
                 <tr v-for="(row,index) in rows" :style="{backgroundColor:getRowColor(row.ID)}">
-                    <td>
+                    <td style="white-space: nowrap;">
                         <div class="btn rounded-circle text-primary" @click="add(index)"><i class="bi bi-plus-circle-fill"></i></div>
                         <div class="btn rounded-circle text-danger" @click="remove(index)"><i class="bi bi-trash-fill"></i></div>
                     </td>
