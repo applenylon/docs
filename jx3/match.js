@@ -10,7 +10,7 @@ const colorList = ["#9e9e9e", "#ff9800", "#ffc107", "#795548", "#ffeb3b", "#cddc
 const github = new GithubCloud({
     owner: "drc-git",
     repo: "store",
-    Authorization: "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",//end 2023-04-26
+    Authorization: "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",//end 2023-04-26
 });;
 const matchServer = github.getJson(uploadPath);
 
