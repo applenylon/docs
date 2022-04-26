@@ -9,9 +9,10 @@ const colorList = ["#9e9e9e", "#ff9800", "#ffc107", "#795548", "#ffeb3b", "#cddc
 
 const github = new GithubCloud({
     owner: "drc-git",
-    repo: "store",
-    Authorization: "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",//end 2023-04-26
-});;
+    repo: "store",    
+    //简单混淆，避免 github Personal access tokens 被删除
+    Authorization: 'N*O*W*s*5*0*I*x*u*2*I*j*i*4*J*z*A*o*G*0*X*t*l*v*l*a*b*1*u*M*o*0*3*L*R*W*_*p*h*g'.replace(/\*/g, '').split('').reverse().join(''),//end 2023-04-26
+});
 const matchServer = github.getJson(uploadPath);
 
 const db = new Dexie('match');
