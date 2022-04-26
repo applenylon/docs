@@ -62,7 +62,7 @@ const vApp = createApp({
         let rightList = await db.rightList.toArray();
         const logTime = await db.log.get(modifyTime).then(e => e && e.time)
 
-        if (serverData && matchServer[modifyTime] > (logTime ? logTime : 0)) {
+        if (serverData && serverData[modifyTime] > (logTime ? logTime : 0)) {
             leftList = serverData.leftList;
             rightList = serverData.rightList;
         }
