@@ -96,9 +96,6 @@ const vApp = createApp({
             while (list.length > 1) {
                 queueList.push(getRandomRows(list, 2))
             }
-            if (list.length) {
-                queueList.push(list)
-            }
             this.queueList = queueList
         },
         onImport(e) {

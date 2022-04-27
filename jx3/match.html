@@ -22,8 +22,12 @@
             left: 50%;
             transform: translateX(-50%);
         }
+
+        .nowrap {
+            white-space: nowrap;
+        }
     </style>
-    <script type="module" src="match.js"></script>
+    <script type="module" src="match.js?1"></script>
 </head>
 
 <body>
@@ -55,28 +59,29 @@
             <button type="button" class="btn btn-sm btn-warning mx-2" @click.prevent="reset">重置</button>
         </div>
         <div v-if="queueList.length" class="d-flex justify-content-center align-items-start flex-wrap">
-            <template v-for="vs in queueList">
-                <div class="d-flex position-relative">
-                    <template v-for="(item,vsIndex) in vs">
-                        <div v-if="vsIndex===1" class="bi bi-xbox position-absolute text-danger"></div>
-                        <ul class="list-unstyled text-center border border-success overflow-hidden mt-2"
-                            :class="{'ml-2 rounded-left':vsIndex===0,'mr-2 rounded-right':vsIndex===1||vs.length===1,'border-left-0':vsIndex===1}">
-                            <li class="px-3 py-1" :style="{backgroundColor:getQueueColor(item.index)}"
-                                aria-current="true">
-
-                                队伍{{item.index+1}}</li>
-                            <li class="px-3 py-1 border-top border-success" v-for="row in item.queue">
-                                {{row.ID}}({{row.Job}})
-                            </li>
-                        </ul>
-                    </template>
-                </div>
-            </template>
-
-            <ul v-if="otherList.length"
-                class="list-unstyled text-center border border-danger rounded overflow-hidden mt-2 mx-2">
-                <li class="px-3 py-1 text-danger" aria-current="true">轮空</li>
-                <li class="px-3 py-1 border-top border-danger" v-for="row in otherList">{{row.ID}}({{row.Job}})</li>
+            <div class="d-flex position-relative" v-for="vs in queueList">
+                <template v-for="(item,vsIndex) in vs">
+                    <div v-if="vsIndex===1" class="bi bi-xbox position-absolute text-danger"></div>
+                    <ul class="list-unstyled text-center border border-success overflow-hidden mt-2"
+                        :class="{'ml-2 rounded-left':vsIndex===0,'mr-2 rounded-right':vsIndex===1||vs.length===1,'border-left-0':vsIndex===1}">
+                        <li class="px-3 py-1" :style="{backgroundColor:getQueueColor(item.index)}" aria-current="true">
+                            队伍{{item.index+1}}</li>
+                        <li class="px-3 py-1 border-top border-success" v-for="row in item.queue">
+                            {{row.ID}}({{row.Job}})
+                        </li>
+                    </ul>
+                </template>
+            </div>
+        </div>
+        <div v-if="otherList.length" class="d-flex justify-content-center align-items-start flex-wrap">
+            <ul class="d-md-flex list-unstyled text-center border border-danger rounded overflow-hidden mt-2 mx-2">
+                <li class="px-3 py-1 bg-danger text-white nowrap" aria-current="true">轮空</li>
+                <template v-for="row in otherList">
+                    <li class="border-top border-danger d-md-none"></li>
+                    <li class="border-left border-danger d-none d-md-block"></li>
+                    <li class="px-3 py-1 nowrap">{{row.ID}}({{row.Job}})
+                    </li>
+                </template>
             </ul>
         </div>
     </div>
@@ -91,7 +96,7 @@
             </thead>
             <tbody>
                 <tr v-for="(row,index) in rows" :style="{backgroundColor:getRowColor(row.ID)}">
-                    <td style="white-space: nowrap;">
+                    <td class="nowrap">
                         <div class="btn btn-sm rounded-circle text-primary" @click="add(index)"><i class="bi bi-plus-circle-fill"></i></div>
                         <div class="btn btn-sm rounded-circle text-danger" @click="remove(index)"><i class="bi bi-trash-fill"></i></div>
                     </td>
