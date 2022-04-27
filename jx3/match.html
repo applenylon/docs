@@ -17,6 +17,11 @@
         [v-cloak] {
             visibility: hidden;
         }
+
+        .bi-xbox {
+            left: 50%;
+            transform: translateX(-50%);
+        }
     </style>
     <script type="module" src="match.js"></script>
 </head>
@@ -50,12 +55,23 @@
             <button type="button" class="btn btn-sm btn-warning mx-2" @click.prevent="reset">重置</button>
         </div>
         <div v-if="queueList.length" class="d-flex justify-content-center align-items-start flex-wrap">
-            <ul v-for="(queue,index) in queueList"
-                class="list-unstyled text-center border border-success rounded overflow-hidden mt-2 mx-2">
-                <li class="px-3 py-1" :style="{backgroundColor:getQueueColor(index)}" aria-current="true">队伍
-                    {{index+1}}</li>
-                <li class="px-3 py-1 border-top border-success" v-for="row in queue">{{row.ID}}({{row.Job}})</li>
-            </ul>
+            <template v-for="vs in queueList">
+                <div class="d-flex position-relative">
+                    <template v-for="(item,vsIndex) in vs">
+                        <div v-if="vsIndex===1" class="bi bi-xbox position-absolute text-danger"></div>
+                        <ul class="list-unstyled text-center border border-success overflow-hidden mt-2"
+                            :class="{'ml-2 rounded-left':vsIndex===0,'mr-2 rounded-right':vsIndex===1||vs.length===1,'border-left-0':vsIndex===1}">
+                            <li class="px-3 py-1" :style="{backgroundColor:getQueueColor(item.index)}"
+                                aria-current="true">
+
+                                队伍{{item.index+1}}</li>
+                            <li class="px-3 py-1 border-top border-success" v-for="row in item.queue">
+                                {{row.ID}}({{row.Job}})
+                            </li>
+                        </ul>
+                    </template>
+                </div>
+            </template>
 
             <ul v-if="otherList.length"
                 class="list-unstyled text-center border border-danger rounded overflow-hidden mt-2 mx-2">
@@ -84,7 +100,6 @@
                 </tr>
             </tbody>
         </table>
-        <!-- <div v-if="alert" class="alert alert-danger" role="alert">{{alert}}</div> -->
     </script>
 </body>
 
