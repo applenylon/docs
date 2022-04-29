@@ -3,7 +3,7 @@ import Dexie from "https://unpkg.com/dexie@latest/dist/modern/dexie.min.mjs"
 import GithubCloud from "https://drc-git.github.io/scripts/github.js"
 import { aesDecrypt } from "https://drc-git.github.io/scripts/aes.js"
 
-const ciphertext = "WyLwuMrGPK1t4uvL27lcYlx1MDAwZq6OIiwirVlcdTAwMDIm6vq1fVxibSpxcWaZz1x1MDAwMWRcIiqNXHUwMDFitU+Iv/3HkNclXHUwMDA3SYR8i4tFXFxcdTAwMWSZXCLe53t4Rb0iXQ==";
+const ciphertext = "WyIlh6Sr4W4vfmx7XGbj1Fff+yIsIpy33Fx1MDAwNWZcdTAwMDBPa1BVSIr0xkBJ8Kzqwp/7omJFXHUwMDFinTvRM7RcdTAwMWHtXHUwMDA2esjG4kGhWFx1MDAxZTFcdFx1MDAwMmdogyJd";
 const Authorization = await aesDecrypt(ciphertext, location.search.slice(1));
 const modifyTime = 'modifyTime';
 const uploadPath = 'jx3/match.json';
