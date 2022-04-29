@@ -1,15 +1,17 @@
 import { createApp } from "https://unpkg.com/vue@next/dist/vue.esm-browser.prod.js"
 import Dexie from "https://unpkg.com/dexie@latest/dist/modern/dexie.min.mjs"
 import GithubCloud from "https://drc-git.github.io/scripts/github.js"
+import { aesDecrypt } from "https://drc-git.github.io/scripts/aes.js"
 
+const ciphertext = "WyLwuMrGPK1t4uvL27lcYlx1MDAwZq6OIiwirVlcdTAwMDIm6vq1fVxibSpxcWaZz1x1MDAwMWRcIiqNXHUwMDFitU+Iv/3HkNclXHUwMDA3SYR8i4tFXFxcdTAwMWSZXCLe53t4Rb0iXQ==";
+const Authorization = await aesDecrypt(ciphertext, location.search.slice(1));
 const modifyTime = 'modifyTime';
 const uploadPath = 'jx3/match.json';
 const colorList = ["#9e9e9e", "#ff9800", "#ffc107", "#795548", "#ffeb3b", "#cddc39", "#4caf50", "#00bcd4", "#03a9f4", "#9c27b0"];
 const github = new GithubCloud({
     owner: "drc-git",
     repo: "store",
-    //简单混淆，避免 github Personal access tokens 被删除
-    Authorization: 'N*O*W*s*5*0*I*x*u*2*I*j*i*4*J*z*A*o*G*0*X*t*l*v*l*a*b*1*u*M*o*0*3*L*R*W*_*p*h*g'.replace(/\*/g, '').split('').reverse().join(''),//end 2023-04-26
+    Authorization
 });
 const db = new Dexie('match');
 
