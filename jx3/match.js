@@ -1,10 +1,10 @@
 import { createApp } from "https://unpkg.com/vue@next/dist/vue.esm-browser.prod.js"
 import Dexie from "https://unpkg.com/dexie@latest/dist/modern/dexie.min.mjs"
 import GithubCloud from "https://drc-git.github.io/scripts/github.js"
-import { aesDecrypt } from "https://drc-git.github.io/scripts/aes.js"
+import { aesDecryptUrlKey } from "https://drc-git.github.io/scripts/aes.js"
 
 const ciphertext = "WyLwuMrGPK1t4uvL27lcYlx1MDAwZq6OIiwirVlcdTAwMDIm6vq1fVxibSpxcWaZz1x1MDAwMWRcIiqNXHUwMDFitU+Iv/3HkNclXHUwMDA3SYR8i4tFXFxcdTAwMWSZXCLe53t4Rb0iXQ==";
-const Authorization = await aesDecrypt(ciphertext, location.search.slice(1));
+const Authorization = await aesDecryptUrlKey(ciphertext, location.search.slice(1));
 const modifyTime = 'modifyTime';
 const uploadPath = 'jx3/match.json';
 const colorList = ["#9e9e9e", "#ff9800", "#ffc107", "#795548", "#ffeb3b", "#cddc39", "#4caf50", "#00bcd4", "#03a9f4", "#9c27b0"];
